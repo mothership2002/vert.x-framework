@@ -36,27 +36,42 @@ public class CustomBridge {
     long startTime = System.nanoTime();
     for (ControllerInterface controller : controllers) {
       Class<? extends ControllerInterface> controllerClass = controller.getClass();
-      for (Method declaredMethod : controllerClass.getDeclaredMethods()) {
-        Annotation[] annotations = declaredMethod.getAnnotations();
-        for (Annotation annotation : annotations) {
-          Method[] annotationMethods = annotation.annotationType().getMethods();
-          for (Method annotationMethod : annotationMethods) {
-            // need to interpret this block
-            try {
-              if (annotationMethod.getParameterCount() == 0 && annotationMethod.getDeclaringClass().equals(annotation.annotationType())) {
-                Object value = annotationMethod.invoke(annotation);
-                initializeRouter(annotation.annotationType().getSimpleName(), (String) value, router, controller, declaredMethod);
-              }
-            } catch (IllegalAccessException | InvocationTargetException e) {
-              log.error("server initial fail");
-            }
-          }
-        }
-      }
+      processControllerMethods(router, controller, controllerClass);
     }
     long endTime = System.nanoTime();
     long elapsedTime = endTime - startTime;
     log.info("Handler mapping and request mapping completed in {} nanoseconds", formatting(elapsedTime));
+  }
+
+  private void processControllerMethods(Router router, ControllerInterface controller, Class<? extends ControllerInterface> controllerClass) {
+    for (Method declaredMethod : controllerClass.getDeclaredMethods()) {
+      Annotation[] annotations = declaredMethod.getAnnotations();
+      processAnnotations(router, controller, declaredMethod, annotations);
+    }
+  }
+
+  private void processAnnotations(Router router, ControllerInterface controller, Method declaredMethod, Annotation[] annotations) {
+    for (Annotation annotation : annotations) {
+      Method[] annotationMethods = annotation.annotationType().getMethods();
+      processAnnotationMethods(router, controller, declaredMethod, annotationMethods, annotation);
+    }
+  }
+
+  private void processAnnotationMethods(Router router, ControllerInterface controller, Method declaredMethod, Method[] annotationMethods, Annotation annotation) {
+    for (Method annotationMethod : annotationMethods) {
+      processAnnotationMethod(router, controller, declaredMethod, annotation, annotationMethod);
+    }
+  }
+
+  private void processAnnotationMethod(Router router, ControllerInterface controller, Method declaredMethod, Annotation annotation, Method annotationMethod) {
+    try {
+      if (annotationMethod.getParameterCount() == 0 && annotationMethod.getDeclaringClass().equals(annotation.annotationType())) {
+        Object value = annotationMethod.invoke(annotation);
+        initializeRouter(annotation.annotationType().getSimpleName(), (String) value, router, controller, declaredMethod);
+      }
+    } catch (IllegalAccessException | InvocationTargetException e) {
+      log.error("Server initial fail", e);
+    }
   }
 
   private void initializeRouter(String annotation, String url, Router router, ControllerInterface controller, Method declaredMethod) {
@@ -87,12 +102,17 @@ public class CustomBridge {
     return json;
   }
 
+  private JsonObject parseError(Throwable e) {
+    return new JsonObject().put("exception", e.getClass().getSimpleName());
+  }
+
   private void setResponse(RoutingContext context, Object dto) {
     setHeader(context.response());
     if (!Objects.isNull(dto)) {
       try {
         context.json(parseResponseBody(dto));
       } catch (IllegalAccessException e) {
+        context.json(parseError(e));
         throw new RuntimeException(e);
       }
     }
