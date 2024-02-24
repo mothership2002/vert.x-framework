@@ -12,10 +12,10 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.text.NumberFormat;
+import java.util.*;
+
+import static hyun.vertx.hello.common.Common.formatting;
 
 @Slf4j
 public class CustomBridge {
@@ -41,7 +41,7 @@ public class CustomBridge {
         for (Annotation annotation : annotations) {
           Method[] annotationMethods = annotation.annotationType().getMethods();
           for (Method annotationMethod : annotationMethods) {
-            // 이부분 코드해석이 필요
+            // need to interpret this block
             try {
               if (annotationMethod.getParameterCount() == 0 && annotationMethod.getDeclaringClass().equals(annotation.annotationType())) {
                 Object value = annotationMethod.invoke(annotation);
@@ -54,17 +54,20 @@ public class CustomBridge {
         }
       }
     }
+    long endTime = System.nanoTime();
+    long elapsedTime = endTime - startTime;
+    log.info("Handler mapping and request mapping completed in {} nanoseconds", formatting(elapsedTime));
   }
 
   private void initializeRouter(String annotation, String url, Router router, Class<? extends ControllerInterface> controllerClass, Method declaredMethod) {
     router.route(url).method(httpMethodMap.get(annotation)).handler(context -> {
       try {
-            Object controllerInstance = controllerClass.getDeclaredConstructor().newInstance();
-            Object result = declaredMethod.invoke(controllerInstance);
-            setResponse(context, result);
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-            log.error("server initial fail");
-        }
+        Object controllerInstance = controllerClass.getDeclaredConstructor().newInstance();
+        Object result = declaredMethod.invoke(controllerInstance);
+        setResponse(context, result);
+      } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+        log.error("server initial fail");
+      }
     });
   }
 
@@ -79,8 +82,7 @@ public class CustomBridge {
         declaredField.setAccessible(true);
         json.put(declaredField.getName(), declaredField.get(dto));
       }
-    }
-    else {
+    } else {
       json.put("result", dto);
     }
     return json;
@@ -96,6 +98,5 @@ public class CustomBridge {
       }
     }
   }
-
 
 }
