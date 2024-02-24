@@ -2,14 +2,10 @@ package hyun.vertx.hello.router;
 
 import hyun.vertx.hello.config.CustomBridge;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpServerResponse;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
-import io.vertx.ext.web.RoutingContext;
+import lombok.extern.slf4j.Slf4j;
 
-import java.lang.reflect.Field;
-import java.util.Objects;
-
+@Slf4j
 public class CustomRouter {
 
   private final CustomBridge bridge;
@@ -23,9 +19,8 @@ public class CustomRouter {
     try {
       bridge.handlerMappingRequestMapping(router);
     } catch (Exception e) {
-      e.printStackTrace();
+      log.error("route constructed fail", e);
     }
-
     return router;
   }
 }

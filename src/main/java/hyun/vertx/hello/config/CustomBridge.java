@@ -2,18 +2,15 @@ package hyun.vertx.hello.config;
 
 import hyun.vertx.hello.controller.ControllerInterface;
 import io.vertx.core.http.HttpMethod;
-import io.vertx.core.http.HttpServerResponse;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
-import io.vertx.ext.web.RoutingContext;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.text.NumberFormat;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static hyun.vertx.hello.common.Common.formatting;
 
@@ -21,6 +18,7 @@ import static hyun.vertx.hello.common.Common.formatting;
 public class CustomBridge {
 
   private final List<? extends ControllerInterface> controllers;
+  private final ResponseComponent responseComponent = new ResponseComponent();
   private final Map<String, HttpMethod> httpMethodMap = new HashMap<>();
 
   public CustomBridge(List<? extends ControllerInterface> controllers) {
@@ -78,44 +76,11 @@ public class CustomBridge {
     router.route(url).method(httpMethodMap.get(annotation)).handler(context -> {
       try {
         Object result = declaredMethod.invoke(controller);
-        setResponse(context, result);
+        responseComponent.setResponse(context, result);
       } catch (IllegalAccessException | InvocationTargetException e) {
         log.error("server initial fail", e);
       }
     });
-  }
-
-  private void setHeader(HttpServerResponse resp) {
-    resp.putHeader("content-type", "application/json");
-  }
-
-  private JsonObject parseResponseBody(Object dto) throws IllegalAccessException {
-    JsonObject json = new JsonObject();
-    if (!(dto instanceof String)) {
-      for (Field declaredField : dto.getClass().getDeclaredFields()) {
-        declaredField.setAccessible(true);
-        json.put(declaredField.getName(), declaredField.get(dto));
-      }
-    } else {
-      json.put("result", dto);
-    }
-    return json;
-  }
-
-  private JsonObject parseError(Throwable e) {
-    return new JsonObject().put("exception", e.getClass().getSimpleName());
-  }
-
-  private void setResponse(RoutingContext context, Object dto) {
-    setHeader(context.response());
-    if (!Objects.isNull(dto)) {
-      try {
-        context.json(parseResponseBody(dto));
-      } catch (IllegalAccessException e) {
-        context.json(parseError(e));
-        throw new RuntimeException(e);
-      }
-    }
   }
 
 }
