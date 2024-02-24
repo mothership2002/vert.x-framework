@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="hyun.vertx.hello.SomethingTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2024-02-24T13:03:05" hostname="LAPTOP-8I3EL5BD" time="0.018">
+  <properties/>
+  <testcase name="test()" classname="hyun.vertx.hello.SomethingTest" time="0.018"/>
+  <system-out><![CDATA[class hyun.vertx.hello.domain.dto.Hello
+world
+hello world
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
