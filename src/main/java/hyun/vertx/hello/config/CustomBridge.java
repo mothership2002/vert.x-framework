@@ -45,7 +45,7 @@ public class CustomBridge {
             try {
               if (annotationMethod.getParameterCount() == 0 && annotationMethod.getDeclaringClass().equals(annotation.annotationType())) {
                 Object value = annotationMethod.invoke(annotation);
-                initializeRouter(annotation.annotationType().getSimpleName(), (String) value, router, controllerClass, declaredMethod);
+                initializeRouter(annotation.annotationType().getSimpleName(), (String) value, router, controller, declaredMethod);
               }
             } catch (IllegalAccessException | InvocationTargetException e) {
               log.error("server initial fail");
@@ -59,14 +59,13 @@ public class CustomBridge {
     log.info("Handler mapping and request mapping completed in {} nanoseconds", formatting(elapsedTime));
   }
 
-  private void initializeRouter(String annotation, String url, Router router, Class<? extends ControllerInterface> controllerClass, Method declaredMethod) {
+  private void initializeRouter(String annotation, String url, Router router, ControllerInterface controller, Method declaredMethod) {
     router.route(url).method(httpMethodMap.get(annotation)).handler(context -> {
       try {
-        Object controllerInstance = controllerClass.getDeclaredConstructor().newInstance();
-        Object result = declaredMethod.invoke(controllerInstance);
+        Object result = declaredMethod.invoke(controller);
         setResponse(context, result);
-      } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-        log.error("server initial fail");
+      } catch (IllegalAccessException | InvocationTargetException e) {
+        log.error("server initial fail", e);
       }
     });
   }
