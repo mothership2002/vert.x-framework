@@ -1,4 +1,4 @@
-package hyun.vertx.hello.config;
+package hyun.vertx.hello.component;
 
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;

@@ -1,6 +1,6 @@
 package hyun.vertx.hello.router;
 
-import hyun.vertx.hello.config.CustomBridge;
+import hyun.vertx.hello.component.config.CustomBridge;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.Router;
 import lombok.extern.slf4j.Slf4j;

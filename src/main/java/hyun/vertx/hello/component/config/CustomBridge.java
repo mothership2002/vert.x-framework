@@ -1,5 +1,6 @@
-package hyun.vertx.hello.config;
+package hyun.vertx.hello.component.config;
 
+import hyun.vertx.hello.component.ResponseComponent;
 import hyun.vertx.hello.controller.ControllerInterface;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.Router;
