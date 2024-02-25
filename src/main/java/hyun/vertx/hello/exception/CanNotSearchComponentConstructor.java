@@ -1,4 +1,4 @@
-package hyun.vertx.hello;
+package hyun.vertx.hello.exception;
 
 import hyun.vertx.hello.controller.ControllerInterface;
 

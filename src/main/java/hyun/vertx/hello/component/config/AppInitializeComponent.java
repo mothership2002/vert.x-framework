@@ -1,6 +1,6 @@
 package hyun.vertx.hello.component.config;
 
-import hyun.vertx.hello.CanNotSearchComponentConstructor;
+import hyun.vertx.hello.exception.CanNotSearchComponentConstructor;
 import hyun.vertx.hello.controller.ControllerInterface;
 import hyun.vertx.hello.repository.RepositoryAndApiConnectorInterface;
 import hyun.vertx.hello.service.Service;
@@ -39,13 +39,9 @@ public class AppInitializeComponent {
     // singleton -> List.copyOf()
     return List.copyOf(classes.stream().map(clazz -> {
       try {
-        Constructor<?>[] declaredConstructors = clazz.getDeclaredConstructors();
-        // only first one constructor -> isn't extend ?
-        for (Constructor<?> declaredConstructor : declaredConstructors) {
-          // public constructor
-          Class<?>[] parameterTypes = declaredConstructor.getParameterTypes();
-          Object[] param = Arrays.stream(parameterTypes).map(serviceMap::get).toArray();
-          return (ControllerInterface) declaredConstructor.newInstance(param);
+        Object declaredConstructor = getComponent(clazz);
+        if (declaredConstructor != null) {
+          return (ControllerInterface) declaredConstructor;
         }
         throw new CanNotSearchComponentConstructor(clazz);
       } catch (InvocationTargetException e) {
@@ -64,7 +60,6 @@ public class AppInitializeComponent {
     Set<Class<?>> classes = reflections.getTypesAnnotatedWith(Service.class);
     return Map.copyOf(classes.stream().map(clazz -> {
       try {
-        // TODO update this code (to chain dao)
         Object declaredConstructor = getComponent(clazz);
         if (declaredConstructor != null) {
           return declaredConstructor;
@@ -78,7 +73,6 @@ public class AppInitializeComponent {
 
   // repository
   // i think that need to jdbc
-
   private Map<Class<?>, RepositoryAndApiConnectorInterface> initDao() {
     Set<Class<? extends RepositoryAndApiConnectorInterface>> subTypesOf = reflections.getSubTypesOf(RepositoryAndApiConnectorInterface.class);
     return Map.copyOf(subTypesOf.stream().map(dao -> {
