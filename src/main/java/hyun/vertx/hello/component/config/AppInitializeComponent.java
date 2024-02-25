@@ -1,5 +1,6 @@
 package hyun.vertx.hello.component.config;
 
+import hyun.vertx.hello.CanNotSearchComponentConstructor;
 import hyun.vertx.hello.controller.ControllerInterface;
 import hyun.vertx.hello.service.Service;
 import lombok.Getter;
@@ -35,11 +36,19 @@ public class AppInitializeComponent {
     // singleton -> List.copyOf()
     return List.copyOf(classes.stream().map(clazz -> {
       try {
-
-        Constructor<? extends ControllerInterface> constructor = clazz.getConstructor();
-        Class<?>[] parameterTypes = constructor.getParameterTypes();
-        Object[] param = Arrays.stream(parameterTypes).map(serviceMap::get).toArray();
-        return constructor.newInstance(param);
+        Constructor<?>[] declaredConstructors = clazz.getDeclaredConstructors();
+        // only first one constructor -> isn't extend ?
+        for (Constructor<?> declaredConstructor : declaredConstructors) {
+          // public constructor
+          Class<?>[] parameterTypes = declaredConstructor.getParameterTypes();
+          Object[] param = Arrays.stream(parameterTypes).map(serviceMap::get).toArray();
+          return (ControllerInterface) declaredConstructor.newInstance(param);
+        }
+        throw new CanNotSearchComponentConstructor(clazz);
+      } catch (InvocationTargetException e) {
+        Throwable cause = e.getTargetException();
+        log.error("Error while invoking method or constructor", cause);
+        throw new RuntimeException(cause);
       } catch (Exception e) {
         log.error("", e);
         throw new RuntimeException(e);
@@ -47,6 +56,7 @@ public class AppInitializeComponent {
     }).toList());
   }
 
+  // service
   private Map<Class<?>, Object> initService() {
     Reflections reflections = new Reflections(ROOT);
     Set<Class<?>> classes = reflections.getTypesAnnotatedWith(Service.class);
@@ -62,5 +72,4 @@ public class AppInitializeComponent {
   // repository
 
 
-  }
 }

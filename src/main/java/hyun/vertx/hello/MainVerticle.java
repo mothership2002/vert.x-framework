@@ -14,10 +14,16 @@ public class MainVerticle extends AbstractVerticle {
   @Override
   public void start(Promise<Void> startPromise) {
     long startTime = System.nanoTime();
-    AppInitializeComponent appInitializeComponent = new AppInitializeComponent();
+    CustomRouter router = null;
+    try {
+      AppInitializeComponent appInitializeComponent = new AppInitializeComponent();
+      CustomBridge bridge = new CustomBridge(appInitializeComponent.getControllerList());
+      router = new CustomRouter(bridge);
+    } catch (Exception e) {
+      startPromise.fail(e);
+      System.exit(0);
+    }
 
-    CustomBridge bridge = new CustomBridge(appInitializeComponent.getControllerList());
-    CustomRouter router = new CustomRouter(bridge);
     vertx.createHttpServer()
       .requestHandler(router.getRouter(vertx))
       .listen(8080)
