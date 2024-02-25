@@ -1,5 +1,6 @@
 package hyun.vertx.hello.controller;
 
+import hyun.vertx.hello.controller.annotation.DeleteMapping;
 import hyun.vertx.hello.controller.annotation.GetMapping;
 import hyun.vertx.hello.controller.annotation.PostMapping;
 import hyun.vertx.hello.controller.annotation.PutMapping;
@@ -28,5 +29,10 @@ public class CustomController implements ControllerInterface {
   @PutMapping("/put")
   public Hello put() {
     return customService.hello();
+  }
+
+  @DeleteMapping("/repo")
+  public String repo() {
+    return customService.connectRepo();
   }
 }
